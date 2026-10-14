@@ -1,0 +1,1 @@
+"""PhotoIndex Python core."""

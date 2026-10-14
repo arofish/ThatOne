@@ -1,0 +1,20 @@
+# Python environment and generated files
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Local credentials and macOS files
+.env
+.env.*
+!.env.example
+.DS_Store
+
+# Local samples, indexes and model artifacts; never commit a real photo library
+sample/
+local-data/
