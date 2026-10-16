@@ -18,3 +18,5 @@ htmlcov/
 # Local samples, indexes and model artifacts; never commit a real photo library
 sample/
 local-data/
+photos/
+test/
