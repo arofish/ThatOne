@@ -1,81 +1,75 @@
-# PhotoIndex
+# ThatOne / PhotoIndex
 
-本地优先的 macOS 摄影作品索引与 AI 检索项目。采用边做边学的导师协作方式；当前处于 M0 单层扫描复查后、递归与自动化测试待实现阶段。
+本地优先的摄影作品索引与 AI 检索项目，面向 macOS 摄影工作流，目标是通过自然语言检索本地照片，并逐步提供原生搜索界面。
 
-## 当前结构
+项目处于早期开发阶段。目前已实现 Python 只读候选图片扫描器；数据库索引、AI 检索和 macOS 界面尚未实现。
 
-```text
-PhotoIndex/                 # 当前 checkout 文件夹名称可以是 thatone
-├── AGENTS.md               # 后续助手接手时的协作约定
-├── README.md               # 运行入口与协作流程
-├── pyproject.toml          # 项目信息、Python 要求与直接依赖
-├── .gitignore              # 排除环境、缓存、私人样本和本地数据
-├── photoindex/
-│   ├── __init__.py
-│   └── scanner.py          # 用户实现的单层扫描器；错误传播待补齐
-├── tests/
-│   ├── __init__.py
-│   └── scaner_test.py      # 手动打印真实目录；尚无自动化测试用例
-└── docs/
-    ├── PROJECT_CHARTER.md
-    ├── DECISIONS.md
-    ├── PROGRESS.md
-    ├── LEARNING_LOG.md
-    └── tasks/              # M0-01 原始契约、M0-02 本批实现与验收任务
-```
+## 当前功能
 
-不预建空的 AI、API、数据库或 SwiftUI 子项目。需要相应功能时再增加模块。
+- 递归扫描目录，识别 `.jpg`、`.jpeg`、`.png`，扩展名大小写不敏感。
+- 包含隐藏目录，跳过子树中的符号链接；允许根路径本身是目录链接。
+- 返回按完整路径字符串排序的绝对路径列表。
+- 无效根目录或读取失败时抛出异常。
+- 只读访问，不修改、移动或删除原始照片。
 
-## Python 与依赖
+扫描器根据扩展名发现候选文件，不解码图片，也不验证图片内容是否有效。完整边界测试与 M0 验收仍在进行中。
 
-当前机器已检查：Python 3.14.0、Git 2.50.1。项目声明 Python >=3.11；目前只检查了本机版本，未验证其他版本或未来 AI 库兼容性。
+## 环境准备
 
-M0 无第三方运行或开发依赖：`pathlib`、`unittest`、`tempfile` 都来自标准库。`pyproject.toml` 的 `dependencies = []` 表示当前无需安装外部包。测试先用 `unittest`，暂不加 pytest、格式化工具或类型检查器。
+项目要求 Python 3.11 或更高版本，目前在 Python 3.14.0 下运行过测试。当前仅使用 Python 标准库，无需安装第三方依赖。
 
-首次在新 checkout 建立环境：
+在仓库根目录执行：
 
 ```sh
 python3 -m venv .venv
-```
-
-每次打开新的终端，在仓库根目录激活环境：
-
-```sh
 source .venv/bin/activate
-python --version
 ```
 
-虚拟环境隔离这个项目后续安装的依赖，不包含在 Git 中。当前从仓库根目录直接运行，不需要 `pip install -e .`；可安装包和构建配置延期。
+## 使用
 
-引入第三方库时，先说明实际用途，再记录直接依赖及可复现的版本解析；届时选择锁定工具并提交锁文件。不要把本机所有已安装包直接复制成项目需求。FastAPI/SQLite 持久化、图像库、NumPy 与模型框架在对应任务开始时评估，其中 SQLite 的 Python 接口来自标准库。
+在仓库根目录启动 Python，调用扫描接口：
 
-## 当前任务与验证
+```python
+from pathlib import Path
+from photoindex.scanner import scan_images
 
-接口契约见 [M0-01](docs/tasks/M0_01_SCANNER.md)。单层筛选修复已复查；下一批由用户按 [M0-02](docs/tasks/M0_02_RECURSION_AND_TESTS.md) 的 5 步顺序完成错误传播、显式栈遍历与自动化测试。该任务已列出高层路线与默认实现选择，可整批完成后统一交付。
+images = scan_images(Path("/path/to/photos"))
+for image in images:
+    print(image)
+```
 
-写好测试后，在仓库根目录运行：
+当前提供 Python 函数接口，尚无命令行工具或图形界面。
+
+## 测试
+
+在仓库根目录、已激活虚拟环境的终端执行：
 
 ```sh
 python -m unittest discover -s tests -v
 ```
 
-2026-10-15 在 `.venv` 的 Python 3.14.0 下实际运行仍为 0 tests，不能视为扫描器通过。`tests/scaner_test.py` 是手动演示脚本；正式用例待写入 `tests/test_scanner.py`。私人样本可放在被忽略的 `sample/` 或 `photos/`，自动化测试使用临时目录。
+测试使用临时目录创建样本，不依赖真实摄影库。当前用例覆盖单层筛选、多层与隐藏目录、空目录、无效根路径，以及受控读取错误；其他边界用例仍在补充。
 
-## Git 工作方式
+## 项目结构
 
-当前使用本地 `main` 分支即可。按可解释的小任务提交，不必每写一行就提交，也不必等整个里程碑完成才提交。首次初始化提交只包含配置、文档与包目录。
-
-日常步骤：
-
-```sh
-git status
-git diff
-# 实现和验证当前小步后，明确选择需要提交的文件
-git add photoindex/scanner.py
-git diff --cached
-git commit -m "feat: add single-directory image discovery"
+```text
+photoindex/
+    scanner.py         # 只读候选图片扫描器
+tests/
+    test_scanner.py    # 自动化测试
+docs/                  # 设计、进度与开发文档
+pyproject.toml         # 项目信息与 Python 版本要求
 ```
 
-上面的命令是完成一个小任务后的提交示例，不代表已提交或已验收。提交前检查暂存区，确认没有原片、密钥、虚拟环境或本地数据库。
+## 路线图
 
-新功能需要隔离时再开分支；GitHub 远程仓库与 CI 后续按需求设置。进度文档记录任务与验收证据，Git 记录文件变化，两者用途不同。
+1. 完善只读扫描器及边界测试。
+2. 使用 SQLite 建立可重复扫描、更新的本地 Asset 索引。
+3. 验证中文图文语义检索的效果与性能。
+4. 接入最小 SwiftUI 搜索界面。
+
+后续计划包含混合检索、增量索引、RAW 与 Apple Photos 支持，以及摄影 Agent，具体范围随验证结果调整。
+
+## 数据原则
+
+原始照片与索引、缓存和模型文件分开保存。云端 AI 默认关闭；涉及数据外发的功能需要明确授权。私人样本、本地数据和环境文件由 `.gitignore` 排除，应保存在约定目录中。
