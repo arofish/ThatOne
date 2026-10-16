@@ -20,6 +20,7 @@ def scan_images(root: Path) -> list[Path]:
             # lstat() 读取子项自身，不跟随链接；失效链接也能识别并跳过。
             mode = item.lstat().st_mode
             if stat.S_ISLNK(mode):
+                # 跳过符号链接
                 continue
             if stat.S_ISDIR(mode):
                 pending.append(item)
