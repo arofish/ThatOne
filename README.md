@@ -57,7 +57,6 @@ photoindex/
     scanner.py         # 只读候选图片扫描器
 tests/
     test_scanner.py    # 自动化测试
-docs/                  # 设计、进度与开发文档
 pyproject.toml         # 项目信息与 Python 版本要求
 ```
 

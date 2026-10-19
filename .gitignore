@@ -8,6 +8,8 @@ dist/
 .pytest_cache/
 .coverage
 htmlcov/
+data/
+
 
 # Local credentials and macOS files
 .env
