@@ -18,7 +18,7 @@
 
 ## 环境准备
 
-项目要求 Python 3.11 或更高版本，目前在 Python 3.14.0 下运行过测试。当前仅使用 Python 标准库，无需安装第三方依赖。
+项目要求 Python 3.11 或更高版本，目前在 Python 3.14.0 下运行过测试。扫描、索引与评测指标仅使用 Python 标准库，无需安装第三方依赖；可选 AI 冒烟实验使用独立环境。
 
 在仓库根目录执行：
 
@@ -41,6 +41,23 @@ for image in images:
 ```
 
 当前提供 Python 函数接口，尚无命令行工具或图形界面。
+
+## 可选：Chinese-CLIP 本地冒烟实验
+
+AI 环境使用 Python 3.13 / macOS arm64。直接依赖位于 `requirements-ai.in`，确切版本与哈希位于 `requirements-ai.lock.txt`。安装示例（需要 uv 和 Python 3.13）：
+
+```sh
+uv venv --python 3.13 .venv-ai
+uv pip sync --python .venv-ai/bin/python --require-hashes requirements-ai.lock.txt
+.venv-ai/bin/python scripts/download_chinese_clip_http.py
+HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 .venv-ai/bin/python scripts/smoke_chinese_clip.py
+```
+
+下载器固定模型 revision，支持断点续传；已有完整 `.part` 会先核对 SHA-256，再改为正式权重文件名。缓存完整时不需要联网。不能直接将未校验的 `.part` 改名后使用。模型路径相对于项目目录解析，不依赖当前终端目录。
+
+冒烟只使用合成图片与一句中文，在 CPU/float32 下验证两个 `(1, 512)` 向量、数值与相似度，不读取私人图库。固定使用慢速预处理器，避免默认处理方式变化。本批 Transformers 4.57.1 的 `get_text_features()` 存在空池化输出问题，冒烟使用该版本可运行的完整图文前向接口。
+
+模型权重、环境和运行数据不提交 Git。冒烟通过只说明本机加载与推理可用，不代表真实检索质量或性能评测已通过。
 
 ## 测试
 
