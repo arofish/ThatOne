@@ -1,0 +1,5 @@
+-r requirements-ai.in
+
+fastapi
+uvicorn
+httpx
