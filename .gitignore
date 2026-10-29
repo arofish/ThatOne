@@ -11,7 +11,12 @@ dist/
 htmlcov/
 data/
 .venv-app/
-/macos/
+
+# Xcode generated and user-specific files
+**/xcuserdata/
+**/*.xcuserstate
+**/DerivedData/
+**/.build/
 
 # Local credentials and macOS files
 .env

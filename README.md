@@ -1,97 +1,107 @@
-# ThatOne / PhotoIndex
+# ThatOne
 
-本地优先的摄影作品索引与 AI 检索项目，面向 macOS 摄影工作流，目标是通过自然语言检索本地照片，并逐步提供原生搜索界面。
+**用一句描述，找到那张照片。**
 
-项目处于早期开发阶段。目前已实现 Python 只读候选图片扫描器、SQLite 本地 Asset 索引、目录日期候选，以及本地中文图文检索。50 图、12 条查询的 CPU 开发基线已通过验收，下一阶段接入本地搜索 API 与最小 SwiftUI 界面；服务和界面尚未实现。
+[简体中文](README.md) | [English](README_EN.md)
 
-## 当前功能
+ThatOne 是一款面向 macOS 的本地语义照片检索应用。无需逐张浏览文件夹，也不必事先为照片添加标签，只需描述你记得的场景，就可以在个人图库中寻找相应照片。
 
-- 递归扫描目录，识别 `.jpg`、`.jpeg`、`.png`，扩展名大小写不敏感。
-- 包含隐藏目录，跳过子树中的符号链接；允许根路径本身是目录链接。
-- 返回按完整路径字符串排序的绝对路径列表。
-- 无效根目录或读取失败时抛出异常。
-- 只读访问，不修改、移动或删除原始照片。
-- 按资料源与相对路径建立 SQLite 索引，重复扫描更新元数据并保留 Asset ID；失败时回滚本轮写入。
-- 从资料根内完整命名为 `YYYY-MM-DD` 的目录提取合法日期候选，支持多个候选并保留来源。候选不自动等同于拍摄日期。
-- 使用固定 Chinese-CLIP 模型编码中文，与缓存图片向量做精确余弦排序。本批验证范围为 50 张样本，不代表整个图库的效果；相似度不保证全部查询条件满足，也未实现无匹配拒答。
+ThatOne 使用 Chinese-CLIP 生成图像与文本向量，在本机完成相似度检索。摄影原片保留在原始位置，应用独立维护索引和预览数据。
 
-扫描器根据扩展名发现候选文件，不解码图片，也不验证图片内容是否有效；图文检索实验另行读取准备好的 PNG 衍生图。
+## 功能
 
-## 环境准备
+- **自然语言检索**：使用中文描述人物、景物、颜色与场景，按语义相似度返回结果。英文查询也可以尝试，目前以中文检索作为主要验证基线。
+- **本地文件夹导入**：选择摄影目录，递归扫描 JPG、JPEG、PNG 文件。
+- **增量索引**：通过文件内容摘要识别新增或变化的图片，复用未变化文件的已有向量。
+- **多目录管理**：分别导入不同的摄影文件夹，统一检索其内容。
+- **原生 macOS 界面**：通过 SwiftUI 展示搜索结果、缩略图、相似度和服务状态。
+- **Finder 原片定位**：从搜索结果直接在 Finder 中显示对应文件。
+- **离线推理**：使用本机模型进行图像和文本编码，不依赖云端推理服务。
+- **独立保存用户数据**：索引、预览和运行数据保存在用户目录，不写入原始摄影文件。
 
-项目要求 Python 3.11 或更高版本，目前在 Python 3.14.0 下运行过测试。扫描、索引与评测指标仅使用 Python 标准库，无需安装第三方依赖；可选 AI 冒烟实验使用独立环境。
+## 技术架构
 
-在仓库根目录执行：
+| 层次 | 技术 |
+|---|---|
+| 桌面客户端 | Swift、SwiftUI、AppKit |
+| 本地服务 | Python、FastAPI、Uvicorn |
+| 视觉语言模型 | Chinese-CLIP ViT-B/16 |
+| 模型运行 | PyTorch、Transformers |
+| 元数据与索引 | SQLite |
+| 向量检索 | NumPy，512 维归一化向量 |
+| 本地通信 | `127.0.0.1`、Bearer Token |
 
-```sh
-python3 -m venv .venv
-source .venv/bin/activate
-```
+ThatOne 将界面与模型推理解耦。SwiftUI 负责用户交互和系统集成，本地 Python 服务负责文件扫描、图像编码、索引更新及语义检索。
+
+## 系统支持
+
+当前主要面向 Apple Silicon Mac 开发和验证。
+
+正式安装包的最低 macOS 版本、支持架构以及签名公证状态，以对应 GitHub Release 的说明为准。
 
 ## 使用
 
-在仓库根目录启动 Python，调用扫描接口：
+正式安装版本的目标工作流程：
 
-```python
-from pathlib import Path
-from photoindex.scanner import scan_images
+1. 启动 ThatOne。
+2. 点击「导入文件夹」，选择存放摄影作品的本地目录。
+3. 等待首次图像编码与索引构建完成。
+4. 在搜索框输入场景描述，查看相似度排序结果。
+5. 点击「在 Finder 中显示」，定位所需原片。
+6. 图库发生变化后，使用「更新索引」同步新增、修改和删除状态。
 
-images = scan_images(Path("/path/to/photos"))
-for image in images:
-    print(image)
-```
+首次索引的耗时取决于图片数量、分辨率与设备性能。后续扫描会复用未变化图片的索引。
 
-当前通过 Python 函数与实验脚本运行，尚无本地 HTTP 服务或图形界面。
+## 数据与隐私
 
-## 可选：Chinese-CLIP 本地冒烟实验
+ThatOne 采用本地优先的处理方式。
 
-AI 环境使用 Python 3.13 / macOS arm64。直接依赖位于 `requirements-ai.in`，确切版本与哈希位于 `requirements-ai.lock.txt`。安装示例（需要 uv 和 Python 3.13）：
+- 不上传原始照片进行推理。
+- 不移动、覆盖或修改原片。
+- 图像向量、数据库及缩略图保存在本地。
+- 用户选择的目录可以位于 Mac 内置磁盘或可访问的外置磁盘。
+- 外置磁盘暂时离线时，不应将整个目录误判为已删除。
+- 不提供云端账户或自动照片同步功能。
 
-```sh
-uv venv --python 3.13 .venv-ai
-uv pip sync --python .venv-ai/bin/python --require-hashes requirements-ai.lock.txt
-.venv-ai/bin/python scripts/download_chinese_clip_http.py
-HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 .venv-ai/bin/python scripts/smoke_chinese_clip.py
-```
+模型权重和用户图库数据相互独立。更新应用程序不应覆盖用户已经建立的索引。
 
-下载器固定模型 revision，支持断点续传；已有完整 `.part` 会先核对 SHA-256，再改为正式权重文件名。缓存完整时不需要联网。不能直接将未校验的 `.part` 改名后使用。模型路径相对于项目目录解析，不依赖当前终端目录。
+## 当前范围
 
-冒烟只使用合成图片与一句中文，在 CPU/float32 下验证两个 `(1, 512)` 向量、数值与相似度，不读取私人图库。固定使用慢速预处理器，避免默认处理方式变化。本批 Transformers 4.57.1 的 `get_text_features()` 存在空池化输出问题，冒烟使用该版本可运行的完整图文前向接口。
+支持的图片格式：JPG、JPEG、PNG。
 
-模型权重、环境和运行数据不提交 Git。冒烟通过只说明本机加载与推理可用，不代表真实检索质量或性能评测已通过。
+暂未提供 RAW、HEIC、Apple Photos 图库直接接入、语义检索拒答阈值或照片编辑功能。
 
-## 测试
+ThatOne 根据相似度排序候选图像。相似度分数不是照片符合全部查询条件的概率，也不保证每次查询都有真正匹配的照片。
 
-在仓库根目录、已激活虚拟环境的终端执行：
+## 版本与发布
 
-```sh
-python -m unittest discover -s tests -v
-```
+v1.0.0 以完整本地模型、用户图库导入、增量索引和独立 macOS 应用为发布目标。
 
-测试使用临时目录创建样本，不依赖真实摄影库。当前用例覆盖扫描筛选、嵌套目录、链接、无效路径、读取错误，以及索引持久化、重复扫描更新、资料源隔离、约束、事务回滚与原片不变。
+可安装版本、校验信息、实际支持的系统及已知限制将在 [GitHub Releases](https://github.com/arofish/ThatOne/releases) 中公布。发布前的开发构建不代表已经完成代码签名、公证及跨设备兼容性验证。
 
-## 项目结构
+## 开发与源码
+
+仓库主要包括：
 
 ```text
-photoindex/
-    scanner.py         # 只读候选图片扫描器
-    indexer.py         # SQLite 资料源与 Asset 索引
-    directory_dates.py # 目录日期候选解析
-tests/
-    test_scanner.py    # 自动化测试
-    test_indexer.py    # 索引与事务测试
-    test_directory_dates.py # 日期解析测试
-pyproject.toml         # 项目信息与 Python 版本要求
+photoindex/    本地索引、向量检索与 HTTP 服务
+macos/         macOS SwiftUI 客户端
+scripts/       模型管理、构建和验证工具
+tests/         Python 自动化测试
 ```
 
-## 路线图
+Python 模型环境、真实摄影作品、用户数据库及生成的模型文件不纳入源码版本管理。
 
-1. 只读扫描器与 SQLite Asset 索引：已实现，可重复扫描更新。
-2. 中文图文语义检索：固定小样本基线已通过质量和性能验收。
-3. 下一步：提供常驻本地搜索 API，接入 SwiftUI 搜索、缩略图展示和 Finder 原片定位。
+本地构建需要与项目配置相符的 Python、Xcode 环境，以及已完整校验的模型文件。
 
-后续计划包含混合检索、增量索引、RAW 与 Apple Photos 支持，以及摄影 Agent，具体范围随验证结果调整。
+## 模型与致谢
 
-## 数据原则
+ThatOne 使用 [Chinese-CLIP](https://github.com/OFA-Sys/Chinese-CLIP) 预训练模型，模型标识为 `OFA-Sys/chinese-clip-vit-base-patch16`。
 
-原始照片与索引、缓存和模型文件分开保存。云端 AI 默认关闭；涉及数据外发的功能需要明确授权。私人样本、本地数据和环境文件由 `.gitignore` 排除，应保存在约定目录中。
+感谢 Chinese-CLIP 项目及 PyTorch、Transformers、FastAPI、NumPy 等开源项目。
+
+Chinese-CLIP 的模型与相关资源归其原权利人所有。模型权重是否包含在某一具体发布资产中，以该版本的授权核查和发布说明为准。
+
+## 项目状态
+
+ThatOne 正在完成 v1.0.0 发布验收。稳定版本以 GitHub Releases 中正式公布的构建为准。

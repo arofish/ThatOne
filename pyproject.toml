@@ -1,6 +1,6 @@
 [project]
 name = "photoindex"
-version = "0.0.1"
+version = "1.0.0"
 description = "Local-first photography indexing and AI search for macOS"
 readme = "README.md"
 requires-python = ">=3.11"
