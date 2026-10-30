@@ -43,13 +43,17 @@ PY
 
 # Use this app only as an unsigned local candidate. External distribution has
 # a separate nested-signing, hardened-runtime, notarization verification gate.
+
+# Generate ThatOne icon before compiling SwiftUI.
+bash "$ROOT/scripts/prepare_app_icon.sh"
 xcodebuild \
   -project "$ROOT/macos/ThatOne/ThatOne.xcodeproj" \
   -scheme ThatOne -configuration Release \
   -destination 'platform=macOS' \
   -derivedDataPath "$OUT/DerivedData" \
+  ASSETCATALOG_COMPILER_APPICON_NAME=AppIcon \
   MARKETING_VERSION=1.0.0 CURRENT_PROJECT_VERSION=1 \
-  CODE_SIGNING_ALLOWED=NO build
+  CODE_SIGNING_ALLOWED=YES build
 
 SOURCE_APP="$OUT/DerivedData/Build/Products/Release/ThatOne.app"
 DEST_APP="$OUT/ThatOne-1.0.0-rc.app"
