@@ -1,6 +1,6 @@
 # ThatOne
 
-**回想一下，找到那张图片。**
+**回想一下，找到那张。**
 
 [简体中文](README.md) | [English](README_EN.md)
 
@@ -37,14 +37,12 @@ ThatOne 使用 Chinese-CLIP 生成图像与文本向量，在本机完成相似�
 
 ## 数据与隐私
 
-ThatOne 采用本地优先的处理方式。
+数据全本地处理。
 
 - 不上传原始照片进行推理。
 - 不移动、覆盖或修改原片。
 - 图像向量、数据库及缩略图保存在本地。
 - 用户选择的目录可以位于 Mac 内置磁盘或可访问的外置磁盘。
-- 外置磁盘暂时离线时，不应将整个目录误判为已删除。
-- 不提供云端账户或自动照片同步功能。
 
 模型权重和用户图库数据相互独立。更新应用程序不应覆盖用户已经建立的索引。
 
@@ -74,7 +72,6 @@ Python 模型环境、真实摄影作品、用户数据库及生成的模型文�
 
 ThatOne 使用 [Chinese-CLIP](https://github.com/OFA-Sys/Chinese-CLIP) 预训练模型，模型标识为 `OFA-Sys/chinese-clip-vit-base-patch16`。
 
-感谢 Chinese-CLIP 项目及 PyTorch、Transformers、FastAPI、NumPy 等开源项目。
+感谢 Chinese-CLIP 项目及 PyTorch、Transformers、FastAPI 等开源项目。
 
-Chinese-CLIP 的模型与相关资源归其原权利人所有。模型权重是否包含在某一具体发布资产中，以该版本的授权核查和发布说明为准。
-
+Chinese-CLIP 的模型与相关资源归其原权利人所有。

@@ -1,6 +1,6 @@
 # ThatOne
 
-**Remember it. Find that photo.**
+**Remember it. Find that one.**
 
 [简体中文](README.md) | [English](README_EN.md)
 
@@ -36,14 +36,12 @@ Initial indexing time depends on the number of images, their resolution, and you
 
 ## Data and Privacy
 
-ThatOne follows a local-first approach.
+All data is processed locally.
 
 - Original photos are not uploaded for inference.
 - Original files are not moved, overwritten, or modified.
 - Image embeddings, databases, and thumbnails are stored locally.
 - Selected folders may be located on your Mac's internal drive or an accessible external drive.
-- A temporarily disconnected external drive should not cause its entire directory to be treated as deleted.
-- No cloud account or automatic photo synchronization is provided.
 
 Model weights and user library data are kept separate. Updating the application should not overwrite an existing photo index.
 
@@ -72,6 +70,6 @@ Building locally requires compatible Python and Xcode environments and fully ver
 
 ThatOne uses the pretrained [Chinese-CLIP](https://github.com/OFA-Sys/Chinese-CLIP) model `OFA-Sys/chinese-clip-vit-base-patch16`.
 
-Thanks to the Chinese-CLIP project and open-source projects including PyTorch, Transformers, FastAPI, and NumPy.
+Thanks to the Chinese-CLIP project and open-source projects including PyTorch, Transformers, and FastAPI.
 
-Chinese-CLIP and its associated resources remain the property of their respective rights holders. Whether model weights are included in a particular release asset depends on the authorization review and release notes for that version.
+Chinese-CLIP and its associated resources remain the property of their respective rights holders.
